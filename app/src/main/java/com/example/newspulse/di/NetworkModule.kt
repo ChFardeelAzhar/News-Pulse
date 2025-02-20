@@ -19,11 +19,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 class NetworkModule {
 
-    @Provides
-    @Singleton
-    fun provideApplication(@ApplicationContext context: Context): NewsApp {
-        return context as NewsApp
-    }
+
 
     @Provides
     @Singleton
@@ -38,18 +34,24 @@ class NetworkModule {
 
     @Provides
     @Singleton
-    fun provideContext(@ApplicationContext context: Context): Context {
-        return context
-    }
-
-    @Provides
-    @Singleton
     fun provideOkHttpClient(): OkHttpClient {
         return OkHttpClient
             .Builder()
             .readTimeout(30L, TimeUnit.SECONDS)
             .writeTimeout(30L, TimeUnit.SECONDS)
             .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideApplication(@ApplicationContext context: Context): NewsApp {
+        return context as NewsApp
+    }
+
+    @Provides
+    @Singleton
+    fun provideContext(@ApplicationContext context: Context): Context {
+        return context
     }
 
     @Provides
