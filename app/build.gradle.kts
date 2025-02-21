@@ -30,11 +30,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "11"
     }
     buildFeatures {
         compose = true
@@ -60,7 +60,8 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 
     // dagger hilt
-    implementation("com.google.dagger:hilt-android:2.51.1")
+
+    implementation("com.google.dagger:hilt-android:2.51.1")  // Latest Hilt
     kapt("com.google.dagger:hilt-android-compiler:2.51.1")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
@@ -68,6 +69,9 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.9.0") // Optional for logging HTTP requests
+
+    // coil
+    implementation("io.coil-kt.coil3:coil-compose:3.1.0")
 
 
 }
