@@ -25,28 +25,33 @@ class NewsViewModel @Inject constructor(
     private var job: Job? = null
 
     init {
-        viewModelScope.launch {
-            val result = getNews()
-        }
-
+        getNews()
     }
 
-    fun getNews(text: String? = null, country: String? = null) {
+    fun getNews(
+        text: String? = null,
+        country: String? = null
+    ) {
+
 
         job?.cancel()
 
         _state.value = ResultState.Loading
+        Log.d("NewsViewModel", "Fetching news...")
 
         job = viewModelScope.launch {
             try {
                 val result = useCase.execute("us", text, country)
                 _state.value = ResultState.Success(result)
 
+                Log.d("NewsViewModel", "News fetched successfully: ${result.news.size} articles")
+
             } catch (e: Exception) {
                 _state.value = ResultState.Error(e.message.toString())
+                Log.e("NewsViewModel", "Error fetching news: ${e.message}")
+
             }
         }
-
 
     }
 

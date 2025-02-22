@@ -12,10 +12,10 @@ interface NewsApi {
 
     @GET("search-news")
     suspend fun getNews(
-        @Query("country") country: String?,
         @Query("text") text: String?,
+        @Query("country") country: String?,
         @Query("language") language: String,
-        @Query("news-sources") newsSources: String? = "https://www.bbc.co.uk",
+        @Query("news-sources") newsSource : String? = "https://www.bbc.co.uk",
         @Query("api-key") apiKey: String = API_KEY,
     ): Response<NewsResponse>
 
