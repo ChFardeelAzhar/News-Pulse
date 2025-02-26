@@ -1,8 +1,15 @@
 package com.example.newspulse.data.model
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+import androidx.room.TypeConverters
+import com.example.newspulse.data.database.Converter
+
+@Entity(tableName = "news")
+@TypeConverters(Converter::class)
 data class News(
     val authors: List<String>?,
-    val id: Int,
+    @PrimaryKey(autoGenerate = true) val id: Int,
     val image: String,
     val language: String,
     val publish_date: String,
