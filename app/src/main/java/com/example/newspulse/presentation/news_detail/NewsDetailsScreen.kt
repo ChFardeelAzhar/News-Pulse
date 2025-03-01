@@ -17,11 +17,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.Book
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -32,6 +35,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -68,49 +74,70 @@ fun NewsDetailsScreen(
 ) {
 
     val newsState = viewModel.newsState.collectAsState()
-    var isClicked by remember { mutableStateOf(false) }
+    var isClicked = remember { mutableStateOf(false) }
     var showLoadingIndicator by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val isBookmarked = viewModel.isBookmarked.collectAsState().value
 
 
-    Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    isClicked = !isClicked
-                    viewModel.addNews(news)
-                }
-            ) {
-                Image(
-                    imageVector = if (isClicked) Icons.Outlined.Favorite else Icons.Filled.Favorite,
-                    contentDescription = null,
-                    colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.error)
-                )
-            }
-        }
-    ) {
-        NewsDetail(news = news, onBackClick = {
-            navController.popBackStack()
-        }, modifier = Modifier.padding(it))
-
-        when (newsState.value) {
+    LaunchedEffect(newsState.value) {
+        when (val value = newsState.value) {
             ResultState.Loading -> {
                 showLoadingIndicator = true
             }
 
             is ResultState.Success -> {
                 showLoadingIndicator = false
-                Toast.makeText(context, "News Added to Favorite", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, value.data.toString(), Toast.LENGTH_SHORT).show()
 
             }
 
             is ResultState.Error -> {
-                Toast.makeText(context, "Failed! to Add news as Favorite", Toast.LENGTH_SHORT)
+                Toast.makeText(context, value.error, Toast.LENGTH_SHORT)
                     .show()
                 showLoadingIndicator = false
             }
 
+            ResultState.Idle -> {
+
+            }
+
         }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.checkIfBookmarked(news.id)
+    }
+
+
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(
+                modifier = Modifier.padding(bottom = 16.dp, end = 8.dp),
+                shape = CircleShape,
+                onClick = {
+                    viewModel.toggleBookmark(news)
+                },
+            ) {
+                Image(
+                    imageVector = if (isBookmarked) Icons.Filled.Book else Icons.Outlined.Book,
+                    contentDescription = null,
+                    colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.error)
+                )
+            }
+        }
+    ) {
+        NewsDetail(
+            news = news, onBackClick = {
+                navController.popBackStack()
+            }, modifier = Modifier.padding(it),
+            onBookmarkClick = {
+                viewModel.toggleBookmark(news)
+                isClicked.value != isClicked.value
+            },
+            isBookmarked = isClicked
+        )
+
 
         if (showLoadingIndicator) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -118,17 +145,22 @@ fun NewsDetailsScreen(
             }
         }
 
-
     }
-
 
 }
 
 @Composable
-fun NewsDetail(news: News, onBackClick: () -> Unit, modifier: Modifier = Modifier) {
+fun NewsDetail(
+    news: News,
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    onBookmarkClick: () -> Unit,
+    isBookmarked: State<Boolean>
+) {
 
     Box(
-        modifier = modifier.fillMaxSize()
+        modifier = modifier
+            .fillMaxSize()
     ) {
 
         AsyncImage(
@@ -189,7 +221,7 @@ fun NewsDetail(news: News, onBackClick: () -> Unit, modifier: Modifier = Modifie
                         height = Dimension.wrapContent
                     }
                     .background(
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.9f),
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
                         shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
                     )
             ) {
@@ -229,8 +261,8 @@ fun NewsDetail(news: News, onBackClick: () -> Unit, modifier: Modifier = Modifie
                         .background(
                             Brush.verticalGradient(
                                 colors = listOf(
-                                    MaterialTheme.colorScheme.background,
-                                    MaterialTheme.colorScheme.onBackground
+                                    MaterialTheme.colorScheme.onBackground,
+                                    MaterialTheme.colorScheme.background
                                 )
                             )
                         )
@@ -244,7 +276,7 @@ fun NewsDetail(news: News, onBackClick: () -> Unit, modifier: Modifier = Modifie
                         Text(
                             text = formatDate(news.publish_date),
                             style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
+                            color = MaterialTheme.colorScheme.background.copy(alpha = 0.5f)
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
@@ -270,6 +302,20 @@ fun NewsDetail(news: News, onBackClick: () -> Unit, modifier: Modifier = Modifie
 
         }
 
+        /*
+        Image(
+            imageVector = if (isBookmarked.value) Icons.Filled.Favorite else Icons.Outlined.Favorite,
+            contentDescription = null,
+            colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.error),
+            modifier = Modifier
+                .padding(bottom = 24.dp, end = 12.dp)
+                .size(40.dp)
+                .align(Alignment.BottomEnd)
+                .clickable {
+                    onBookmarkClick()
+                }
+        )
+         */
     }
 
 

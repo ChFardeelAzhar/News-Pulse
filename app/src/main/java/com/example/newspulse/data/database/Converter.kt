@@ -6,14 +6,16 @@ import com.example.newspulse.data.model.News
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
+
 class Converter {
 
     @TypeConverter
-    fun fromListToJson(value: List<String>): String {
-        val gson = Gson()
-        return gson.toJson(value)
+
+    fun fromListToJson(list: List<String>?): String {
+        return Gson().toJson(list ?: emptyList<String>()) // Convert null to an empty list
     }
 
+    @TypeConverter
     fun fromJsonToList(value: String): List<String> {
 
         val gson = Gson()

@@ -19,7 +19,7 @@ class NewsViewModel @Inject constructor(
     private val useCase: GetNewsUseCase
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow<ResultState<NewsResponse>>(ResultState.Loading)
+    private val _state = MutableStateFlow<ResultState<NewsResponse>>(ResultState.Idle)
     val state: StateFlow<ResultState<NewsResponse>> = _state
 
     private var job: Job? = null

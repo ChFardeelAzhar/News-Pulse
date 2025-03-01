@@ -6,7 +6,6 @@ import androidx.room.TypeConverters
 import com.example.newspulse.data.database.Converter
 
 @Entity(tableName = "news")
-@TypeConverters(Converter::class)
 data class News(
     val authors: List<String>?,
     @PrimaryKey(autoGenerate = true) val id: Int,

@@ -6,6 +6,7 @@ import com.example.newspulse.data.dao.NewsDao
 import com.example.newspulse.data.model.News
 import com.example.newspulse.utils.ResultState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -16,25 +17,12 @@ class BookMarksViewModel @Inject constructor(
     private val dao: NewsDao
 ) : ViewModel() {
 
-    private val _bookMarksState = MutableStateFlow<ResultState<String>>(ResultState.Loading)
+    private val _bookMarksState = MutableStateFlow<ResultState<String>>(ResultState.Idle)
     val bookMarksState: StateFlow<ResultState<String>> = _bookMarksState
 
 
-    fun getAllBookMarks() = dao.getNews()
-
-
-    fun deleteNews(news: News) {
-        _bookMarksState.value = ResultState.Loading
-
-        viewModelScope.launch {
-            try {
-                dao.deleteNews(news)
-                _bookMarksState.value = ResultState.Success("News Removed Successfully")
-            } catch (e: Exception) {
-                _bookMarksState.value = ResultState.Error(e.message.toString())
-            }
-        }
-
+    fun getAllBookMarks(): Flow<List<News>> {
+        return dao.getNews()
     }
 
 

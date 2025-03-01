@@ -15,23 +15,6 @@ abstract class NewsDatabase : RoomDatabase() {
 
     abstract fun newsDao(): NewsDao
 
-    companion object {
-
-        private const val DATABASE_NAME = "news_db"
-
-        @JvmStatic
-        fun getDatabase(context: Context): NewsDatabase {
-
-            return Room.databaseBuilder(
-                context,
-                NewsDatabase::class.java,
-                DATABASE_NAME
-            ).fallbackToDestructiveMigrationFrom().build()
-
-        }
-
-
-    }
 
 
 }

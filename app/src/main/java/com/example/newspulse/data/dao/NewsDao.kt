@@ -5,19 +5,22 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import com.example.newspulse.data.model.News
-import com.example.newspulse.utils.ResultState
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface NewsDao {
 
 
     @Query("SELECT * FROM news")
-    fun getNews(): ResultState<List<News>>
+    fun getNews(): Flow<List<News>>
 
     @Insert
     suspend fun addNews(news: News)
 
     @Delete
     suspend fun deleteNews(news: News)
+
+    @Query("SELECT id FROM news WHERE id = :newsId")
+    suspend fun isNewsBookmarked(newsId: Int): Int?
 
 }

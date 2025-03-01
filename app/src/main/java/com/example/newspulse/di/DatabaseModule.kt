@@ -1,6 +1,7 @@
 package com.example.newspulse.di
 
 import android.content.Context
+import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.newspulse.data.dao.NewsDao
 import com.example.newspulse.data.database.NewsDatabase
@@ -16,8 +17,10 @@ class DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideDatabase(context: Context): RoomDatabase {
-        return NewsDatabase.getDatabase(context)
+    fun provideDatabase(context: Context): NewsDatabase {
+        return Room.databaseBuilder(context, NewsDatabase::class.java, "news_db")
+            .fallbackToDestructiveMigrationFrom()
+            .build()
     }
 
     @Provides
