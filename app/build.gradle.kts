@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.dagger.hilt.android")
+    id("org.jetbrains.kotlin.kapt")
+
 }
 
 android {
@@ -77,8 +79,18 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.8.7")
 
     // constraint layout
-    implementation ("androidx.constraintlayout:constraintlayout-compose:1.0.1")
+    implementation("androidx.constraintlayout:constraintlayout-compose:1.0.1")
 
+    // room
+    val room_version = "2.6.1"
+
+    implementation("androidx.room:room-runtime:$room_version")
+    kapt("androidx.room:room-compiler:$room_version")
+    annotationProcessor("androidx.room:room-compiler:$room_version")
+    implementation("androidx.room:room-ktx:$room_version")
+
+    // google icons
+    implementation("androidx.compose.material:material-icons-extended:1.7.8")
 
 }
 

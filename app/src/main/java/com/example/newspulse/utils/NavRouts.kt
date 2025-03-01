@@ -10,6 +10,7 @@ object NavRouts {
     sealed class Destination(val route: String) {
         data object NewsHomeScreen : Destination("home_screen")
         data object NewsDetailScreen : Destination("detail_screen?news={news}")
+        data object BookMarksScreen : Destination("bookMarks_screen?news={news}")
     }
 
 

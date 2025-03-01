@@ -16,10 +16,19 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.CollectionsBookmark
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Newspaper
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -33,7 +42,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -41,12 +52,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import coil.compose.AsyncImage
 import com.example.newspulse.data.model.News
+import com.example.newspulse.presentation.BottomNavItem
 import com.example.newspulse.utils.NavRouts
 import com.example.newspulse.utils.ResultState
 import com.example.newspulse.utils.formatDate
 import kotlinx.coroutines.launch
+
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -60,8 +75,53 @@ fun NewsHomeScreen(viewModel: NewsViewModel = hiltViewModel(), navController: Na
     val newsResponse = remember { mutableStateOf<List<News>>(emptyList()) }
     var text = remember { mutableStateOf("") }
 
+    val bottomNavItems = listOf(
+        BottomNavItem.Home,
+        BottomNavItem.Bookmarks
+    )
 
-    Scaffold {
+    Scaffold(
+        bottomBar = {
+            BottomAppBar(
+                modifier = Modifier.height(110.dp)
+            ) {
+
+                val selectedRoute =
+                    navController.currentBackStackEntryAsState().value?.destination?.route
+
+                bottomNavItems.forEach { item ->
+                    NavigationBarItem(
+                        selected = selectedRoute == item.route,
+                        onClick = {
+                            navController.navigate(item.route) {
+                                popUpTo(navController.graph.startDestinationId) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        icon = {
+                            Image(
+                                imageVector = item.icon,
+                                contentDescription = item.label,
+                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground),
+                                modifier = Modifier.height(24.dp) // Adjusted icon size for balance
+                            )
+                        },
+                        label = {
+                            Text(
+                                text = item.label,
+                                color = MaterialTheme.colorScheme.onBackground,
+                                fontSize = 12.sp // Reduced text size for compact look
+                            )
+                        },
+
+                        )
+                }
+            }
+        }
+    ) {
         Column(
             modifier = Modifier
                 .padding(it)
@@ -87,7 +147,7 @@ fun NewsHomeScreen(viewModel: NewsViewModel = hiltViewModel(), navController: Na
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 8.dp)
+                    .padding(start = 8.dp, end = 8.dp)
             ) {
                 item {
                     Text("News", fontSize = 25.sp, fontWeight = FontWeight.Bold)
@@ -146,6 +206,9 @@ fun NewsHomeScreen(viewModel: NewsViewModel = hiltViewModel(), navController: Na
                 showLoadingIndicator.value = false
             }
 
+            ResultState.Idle -> {
+
+            }
         }
 
         if (showLoadingIndicator.value) {
@@ -256,3 +319,40 @@ fun NewsSearchBar(text: String, onChangeSearchbar: (String) -> Unit) {
     }
 
 }
+
+
+
+
+/*
+@Composable
+fun BottomNavBar(navController: NavController) {
+    val items = listOf(
+        BottomNavItem("News", Icons.Default.Newspaper, NavRouts.Destination.NewsHomeScreen.route),
+        BottomNavItem(
+            "Bookmarks",
+            Icons.Default.Bookmark,
+            NavRouts.Destination.NewsDetailScreen.route
+        )
+    )
+
+    NavigationBar(
+        containerColor = MaterialTheme.colorScheme.surface, // Adapts to light/dark mode
+        tonalElevation = 5.dp
+    ) {
+        val currentRoute = navController.currentDestination?.route
+        items.forEach { item ->
+            NavigationBarItem(
+                selected = currentRoute == item.route,
+                onClick = { navController.navigate(item.route) },
+                icon = {
+                    Icon(imageVector = item.icon, contentDescription = item.label)
+                },
+                label = { Text(item.label) },
+                alwaysShowLabel = true, // Always show labels
+            )
+        }
+    }
+}
+
+
+ */
