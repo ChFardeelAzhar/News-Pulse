@@ -16,23 +16,17 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.CollectionsBookmark
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Newspaper
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,9 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -52,7 +44,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import coil.compose.AsyncImage
 import com.example.newspulse.data.model.News
@@ -60,6 +51,10 @@ import com.example.newspulse.presentation.BottomNavItem
 import com.example.newspulse.utils.NavRouts
 import com.example.newspulse.utils.ResultState
 import com.example.newspulse.utils.formatDate
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import kotlinx.coroutines.Delay
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
@@ -73,12 +68,14 @@ fun NewsHomeScreen(viewModel: NewsViewModel = hiltViewModel(), navController: Na
 
     var showLoadingIndicator = remember { mutableStateOf(false) }
     val newsResponse = remember { mutableStateOf<List<News>>(emptyList()) }
-    var text = remember { mutableStateOf("") }
+    var searchText = remember { mutableStateOf("") }
 
     val bottomNavItems = listOf(
         BottomNavItem.Home,
         BottomNavItem.Bookmarks
     )
+
+    var isRefreshing by remember { mutableStateOf(false) }
 
     Scaffold(
         bottomBar = {
@@ -88,8 +85,13 @@ fun NewsHomeScreen(viewModel: NewsViewModel = hiltViewModel(), navController: Na
 
                 val selectedRoute =
                     navController.currentBackStackEntryAsState().value?.destination?.route
-
                 bottomNavItems.forEach { item ->
+
+                    val selectedColor =
+                        if (selectedRoute == item.route) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.onBackground.copy(
+                            alpha = .5f
+                        )
+
                     NavigationBarItem(
                         selected = selectedRoute == item.route,
                         onClick = {
@@ -105,14 +107,14 @@ fun NewsHomeScreen(viewModel: NewsViewModel = hiltViewModel(), navController: Na
                             Image(
                                 imageVector = item.icon,
                                 contentDescription = item.label,
-                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground),
+                                colorFilter = ColorFilter.tint(color = selectedColor),
                                 modifier = Modifier.height(24.dp) // Adjusted icon size for balance
                             )
                         },
                         label = {
                             Text(
                                 text = item.label,
-                                color = MaterialTheme.colorScheme.onBackground,
+                                color = selectedColor,
                                 fontSize = 12.sp // Reduced text size for compact look
                             )
                         },
@@ -122,44 +124,58 @@ fun NewsHomeScreen(viewModel: NewsViewModel = hiltViewModel(), navController: Na
             }
         }
     ) {
-        Column(
-            modifier = Modifier
-                .padding(it)
-                .fillMaxWidth()
+
+        SwipeRefresh(
+            state = rememberSwipeRefreshState(isRefreshing),
+            onRefresh = {
+                isRefreshing = true
+                scope.launch {
+                    viewModel.getNews(text = searchText.value)
+                    delay(2000)
+                    isRefreshing = false
+                }
+            }
         ) {
-            // Search Bar
+            Column(
+                modifier = Modifier
+                    .padding(it)
+                    .fillMaxWidth()
+            ) {
+                // Search Bar
 
 
-            NewsSearchBar(text.value, onChangeSearchbar = { str ->
-                text.value = str
-                viewModel.getNews(
-                    text = str
+                NewsSearchBar(
+                    searchText,
+                    onSearchClick = { text ->
+                        viewModel.getNews(text = text)
+                    }
+
                 )
 
-            })
+
+                // Category
 
 
-            // Category
+                // Lazy Column For each News Articles
 
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(start = 8.dp, end = 8.dp)
+                ) {
+                    item {
+                        Text("News", fontSize = 25.sp, fontWeight = FontWeight.Bold)
+                    }
+                    items(newsResponse.value) { news ->
+                        NewsItem(news, onNewsClick = {
+                            navController.navigate(NavRouts.createDetailScreenRoute(news))
+                        })
+                    }
 
-            // Lazy Column For each News Articles
-
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(start = 8.dp, end = 8.dp)
-            ) {
-                item {
-                    Text("News", fontSize = 25.sp, fontWeight = FontWeight.Bold)
                 }
-                items(newsResponse.value) { news ->
-                    NewsItem(news, onNewsClick = {
-                        navController.navigate(NavRouts.createDetailScreenRoute(news))
-                    })
-                }
+
 
             }
-
 
         }
 
@@ -195,7 +211,7 @@ fun NewsHomeScreen(viewModel: NewsViewModel = hiltViewModel(), navController: Na
                     Button(onClick = {
                         scope.launch {
                             viewModel.getNews(
-                                text.value
+                                searchText.value
                             )
                         }
                     }) {
@@ -266,13 +282,13 @@ fun NewsItem(news: News, onNewsClick: () -> Unit) {
                 .padding(7.dp)
         )
 
-//        Text(
-//            text = news.authors.toString(),
-//            style = MaterialTheme.typography.titleSmall,
-//            modifier = Modifier
-//                .align(Alignment.BottomStart)
-//                .padding(5.dp)
-//        )
+        Text(
+            text = news.authors.toString(),
+            style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(5.dp)
+        )
 
 
         Text(
@@ -290,7 +306,7 @@ fun NewsItem(news: News, onNewsClick: () -> Unit) {
 
 
 @Composable
-fun NewsSearchBar(text: String, onChangeSearchbar: (String) -> Unit) {
+fun NewsSearchBar(text: MutableState<String>, onSearchClick: (String) -> Unit) {
 
     Box(
         modifier = Modifier
@@ -298,8 +314,10 @@ fun NewsSearchBar(text: String, onChangeSearchbar: (String) -> Unit) {
             .padding(12.dp),
     ) {
         OutlinedTextField(
-            value = text,
-            onValueChange = onChangeSearchbar,
+            value = text.value,
+            onValueChange = {
+                text.value = it
+            },
             modifier = Modifier.fillMaxWidth(),
             placeholder = {
                 Text("Search here", color = MaterialTheme.colorScheme.onBackground)
@@ -312,15 +330,16 @@ fun NewsSearchBar(text: String, onChangeSearchbar: (String) -> Unit) {
             contentDescription = null,
             modifier = Modifier
                 .align(Alignment.CenterEnd)
-                .padding(end = 16.dp),
+                .padding(end = 16.dp)
+                .clickable {
+                    onSearchClick(text.value)
+                },
             colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
         )
 
     }
 
 }
-
-
 
 
 /*

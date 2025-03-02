@@ -92,6 +92,8 @@ dependencies {
     // google icons
     implementation("androidx.compose.material:material-icons-extended:1.7.8")
 
+    // swipe to refresh
+    implementation("com.google.accompanist:accompanist-swiperefresh:0.33.2-alpha")
 }
 
 kapt {

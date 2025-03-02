@@ -78,6 +78,12 @@ fun BookMarksScreen(
                     navController.currentBackStackEntryAsState().value?.destination?.route
 
                 bottomNavItems.forEach { item ->
+
+                    val selectedColor =
+                        if (selectedRoute == item.route) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.onBackground.copy(
+                            alpha = .5f
+                        )
+
                     NavigationBarItem(
                         selected = selectedRoute == item.route,
                         onClick = {
@@ -93,14 +99,14 @@ fun BookMarksScreen(
                             Image(
                                 imageVector = item.icon,
                                 contentDescription = item.label,
-                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground),
+                                colorFilter = ColorFilter.tint(color = selectedColor),
                                 modifier = Modifier.height(24.dp) // Adjusted icon size for balance
                             )
                         },
                         label = {
                             Text(
                                 text = item.label,
-                                color = MaterialTheme.colorScheme.onBackground,
+                                color = selectedColor,
                                 fontSize = 12.sp // Reduced text size for compact look
                             )
                         },
