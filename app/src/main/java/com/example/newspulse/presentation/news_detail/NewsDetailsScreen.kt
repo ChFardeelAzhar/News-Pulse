@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -157,166 +158,132 @@ fun NewsDetail(
     onBookmarkClick: () -> Unit,
     isBookmarked: State<Boolean>
 ) {
-
-    Box(
+    Column(
         modifier = modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
     ) {
-
-        AsyncImage(
-            model = news.image,
-            contentDescription = null,
+        // Header Image Section
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(300.dp)
-                .background(color = Color.LightGray),
-            contentScale = ContentScale.FillBounds
-        )
-
-        ConstraintLayout(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
         ) {
-
-            val (backBtn, topSpace, summary, newsContent) = createRefs()
-
-            Spacer(
-                modifier = Modifier
-                    .height(250.dp)
-                    .constrainAs(topSpace) {
-                        top.linkTo(parent.top)
-                    }
-            )
-
-            Image(
-                imageVector = Icons.Filled.ArrowBack,
+            AsyncImage(
+                model = news.image,
                 contentDescription = null,
                 modifier = Modifier
-                    .size(30.dp)
-                    .background(
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f),
-                        shape = RoundedCornerShape(4.dp)
-                    )
-                    .clickable {
-                        onBackClick()
-                    }
-                    .padding(3.dp)
-                    .constrainAs(backBtn) {
-                        top.linkTo(parent.top, margin = 16.dp)
-                        start.linkTo(parent.start, margin = 16.dp)
-                    },
-                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.background)
+                    .fillMaxSize()
+                    .background(color = Color.LightGray),
+                contentScale = ContentScale.Crop
             )
 
-            // News Detail Text
-
+            // Dark overlay for better button visibility
             Box(
                 modifier = Modifier
-                    .constrainAs(newsContent) {
-                        top.linkTo(parent.top, margin = 370.dp) // <-- Position it below summary
-                        start.linkTo(summary.start)
-                        end.linkTo(summary.end)
-                        bottom.linkTo(parent.bottom)
-                        height = Dimension.wrapContent
-                    }
+                    .fillMaxSize()
                     .background(
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
-                        shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
-                    )
-            ) {
-
-                Text(
-                    news.text,
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(top = 50.dp, start = 20.dp, end = 20.dp, bottom = 20.dp),
-                    color = MaterialTheme.colorScheme.background
-                )
-
-            }
-
-            // Summary Card
-
-            Card(
-                modifier = Modifier
-                    .width(300.dp)
-                    .constrainAs(summary) {
-                        top.linkTo(topSpace.bottom)
-                        start.linkTo(parent.start)
-                        end.linkTo(parent.end)
-                    },
-                elevation = CardDefaults.cardElevation(4.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.Transparent
-                )
-            ) {
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(shape = RoundedCornerShape(16.dp))
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    MaterialTheme.colorScheme.onBackground,
-                                    MaterialTheme.colorScheme.background
-                                )
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Black.copy(alpha = 0.3f),
+                                Color.Transparent,
+                                Color.Black.copy(alpha = 0.5f)
                             )
                         )
-                        .padding(20.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.Start,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = formatDate(news.publish_date),
-                            style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.background.copy(alpha = 0.5f)
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = news.summary ?: "",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.background
-//                            color = Color.Gray.copy(alpha = 0.7f)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = news.authors?.joinToString(", ") ?: "",
-                            style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.background.copy(alpha = 0.7f)
+                    )
+            )
 
-                        )
-                    }
-                }
-
-
-            }
-
-
+            // Back Button
+            Image(
+                imageVector = Icons.Filled.ArrowBack,
+                contentDescription = "Back",
+                modifier = Modifier
+                    .padding(16.dp)
+                    .size(32.dp)
+                    .background(
+                        color = Color.Black.copy(alpha = 0.6f),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .clickable { onBackClick() }
+                    .padding(6.dp)
+                    .align(Alignment.TopStart),
+                colorFilter = ColorFilter.tint(color = Color.White)
+            )
         }
 
-        /*
-        Image(
-            imageVector = if (isBookmarked.value) Icons.Filled.Favorite else Icons.Outlined.Favorite,
-            contentDescription = null,
-            colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.error),
+        // Summary Card - overlapping the image
+        Card(
             modifier = Modifier
-                .padding(bottom = 24.dp, end = 12.dp)
-                .size(40.dp)
-                .align(Alignment.BottomEnd)
-                .clickable {
-                    onBookmarkClick()
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .offset(y = (-50).dp),
+            elevation = CardDefaults.cardElevation(8.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp)
+            ) {
+                Text(
+                    text = formatDate(news.publish_date),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Text(
+                    text = news.title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                
+                if (!news.summary.isNullOrBlank()) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = news.summary,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                        lineHeight = 20.sp
+                    )
                 }
-        )
-         */
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = when {
+                        news.authors.isNullOrEmpty() -> "Unknown Author"
+                        else -> "By ${news.authors.joinToString(", ")}"
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+
+        // Main Content
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            elevation = CardDefaults.cardElevation(4.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            )
+        ) {
+            Text(
+                text = news.text,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                lineHeight = 24.sp,
+                modifier = Modifier.padding(20.dp)
+            )
+        }
+        
+        // Bottom spacing for floating action button
+        Spacer(modifier = Modifier.height(80.dp))
     }
-
-
 }
